@@ -1,0 +1,185 @@
+@model List<AspnetCoreMvcFull.Models.ViewModels.ProductoViewModel>
+
+@{
+  ViewData["Title"] = "Lista de Productos";
+}
+
+<!-- ************** Content ************** -->
+<div class="row mb-12 g-6">
+  @foreach (var producto in Model)
+  {
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title">@producto.Nombre</h5>
+          <p class="card-text">@producto.Descripcion</p>
+          <p class="card-text">Precio: @producto.Precio</p>
+          <p class="card-text">Stock: @producto.Stock</p>
+
+          <!-- Botón de eliminar -->
+          <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal"
+                  data-producto-id="@producto.Id">
+            Eliminar
+          </button>
+
+          <button class="btn btn-warning editar-producto" data-id="@producto.Id" data-nombre="@producto.Nombre" data-descripcion="@producto.Descripcion" data-precio="@producto.Precio" data-stock="@producto.Stock">Editar</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Modal de Confirmación -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar Eliminación</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        ¿Estás seguro de que deseas eliminar este producto?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" id="confirmDeleteBtn" class="btn btn-danger">Eliminar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Edición -->
+<div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editProductModalLabel">Editar Producto</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editProductForm">
+          <input type="hidden" id="productId" name="productId" />
+
+          <div class="mb-3">
+            <label for="productName" class="form-label">Nombre</label>
+            <input type="text" class="form-control" id="productName" name="productName" />
+          </div>
+
+          <div class="mb-3">
+            <label for="productDescription" class="form-label">Descripción</label>
+            <input type="text" class="form-control" id="productDescription" name="productDescription" />
+          </div>
+
+          <div class="mb-3">
+            <label for="productPrice" class="form-label">Precio</label>
+            <input type="number" class="form-control" id="productPrice" name="productPrice" step="0.01" min="0" />
+          </div>
+
+          <div class="mb-3">
+            <label for="productStock" class="form-label">Stock</label>
+            <input type="number" class="form-control" id="productStock" name="productStock" min="0" />
+          </div>
+
+          <button type="button" class="btn btn-primary" id="saveProductBtn">Guardar Cambios</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+@section VendorScripts {
+  <script src="~/vendor/libs/masonry/masonry.js"></script>
+  <script>
+    // Asignar el ID del producto al botón de eliminación
+    $('#confirmDeleteModal').on('show.bs.modal', function (event) {
+      var button = $(event.relatedTarget);
+      var productoId = button.data('producto-id');
+      var modal = $(this);
+      modal.find('#confirmDeleteBtn').data('producto-id', productoId);
+    });
+
+    // Manejar la eliminación del producto
+    $('#confirmDeleteBtn').on('click', function() {
+      var productoId = $(this).data('producto-id');
+
+      // Realizar una petición AJAX para eliminar el producto
+      $.ajax({
+        url: '@Url.Action("EliminarProducto", "Producto")',
+        type: 'POST',
+        data: { id: productoId },
+        success: function(response) {
+          if (response.success) {
+            // Cerrar el modal
+            $('#confirmDeleteModal').modal('hide');
+
+            // Eliminar el producto de la lista sin recargar la página
+            $('button[data-producto-id="' + productoId + '"]').closest('.col-md-6').remove();
+          } else {
+            $('#confirmDeleteModal').modal('hide');
+
+            // Eliminar el producto de la lista sin recargar la página
+            $('button[data-producto-id="' + productoId + '"]').closest('.col-md-6').remove();
+          }
+        },
+        error: function() {
+          alert('Hubo un error al intentar eliminar el producto.');
+        }
+      });
+    });
+  </script>
+
+  <script>
+    // Evento para abrir el modal con los datos del producto
+    $(document).on('click', '.editar-producto', function() {
+      var productoId = $(this).data('id');
+      var productoNombre = $(this).data('nombre');
+      var productoDescripcion = $(this).data('descripcion');
+      var productoPrecio = $(this).data('precio');
+      var productoStock = $(this).data('stock');
+
+      // Rellenar el modal con los datos del producto
+      $('#productId').val(productoId);
+      $('#productName').val(productoNombre);
+      $('#productDescription').val(productoDescripcion);
+      $('#productPrice').val(productoPrecio);
+      $('#productStock').val(productoStock);
+
+      // Mostrar el modal
+      $('#editProductModal').modal('show');
+    });
+
+    // Evento para guardar los cambios del producto
+    $('#saveProductBtn').click(function() {
+      var precio = $('#productPrice').val();
+
+      // Convertir la coma en punto si es necesario
+      if (precio.includes(',')) {
+        precio = precio.replace(',', '.');
+      }
+
+      // Realizar la actualización del producto con el precio convertido
+      var producto = {
+        id: $('#productId').val(),
+        nombre: $('#productName').val(),
+        descripcion: $('#productDescription').val(),
+        precio: parseFloat(precio), // Asegurarse de que sea un número
+        stock: $('#productStock').val()
+      };
+
+      // Llamar a la acción del backend para actualizar el producto
+      $.ajax({
+        type: "POST",
+        url: "/Producto/ActualizarProducto", // Cambiar según la ruta de tu acción en el backend
+        data: producto,
+        success: function(response) {
+          // Cerrar el modal y actualizar la lista de productos o redirigir
+          $('#editProductModal').modal('hide');
+          location.reload();
+        },
+        error: function(xhr, status, error) {
+          alert("Hubo un error al actualizar el producto.");
+        }
+      });
+    });
+  </script>
+}

@@ -1,0 +1,150 @@
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using Newtonsoft.Json
+@model IEnumerable<AspnetCoreMvcFull.Models.ViewModels.PedidoViewModel>
+
+@{
+  ViewData["Title"] = "Pedidos Pendientes";
+}
+
+<h1>Pedidos Pendientes</h1>
+
+@if (ViewBag.Mensaje != null)
+{
+  <div class="alert alert-info">
+    @ViewBag.Mensaje
+  </div>
+}
+<table class="table table-striped mt-3">
+  <thead>
+  <tr>
+    <th>ID Pedido</th>
+    <th>Cliente</th>
+    <th>Productos</th>
+    <th>Promociones</th>
+    <th>Total</th>
+    <th>QR</th>
+    <th>Estado de Venta</th>
+    <th>Accion</th>
+  </tr>
+  </thead>
+  <tbody>
+  @foreach (var pedido in Model)
+  {
+    <tr>
+      <td>@pedido.Id</td>
+      <td>@pedido.IdCliente</td>
+      <td>
+        @foreach (var producto in pedido.Productos)
+        {
+          <div>@producto.IdProducto - Cantidad: @producto.Cantidad</div>
+        }
+      </td>
+      <td>
+        @foreach (var promocion in pedido.Promociones)
+        {
+          <div>@promocion.IdPromo - Cantidad: @promocion.Cantidad</div>
+        }
+      </td>
+      <td>@pedido.Total.ToString("C")</td>
+      <td>@pedido.Qr</td>
+      <td>@pedido.EstadoVenta</td>
+      <td> @if (!pedido.Qr)
+           {
+             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#montoModal"
+                     data-pedido-id="@pedido.Id">
+               Asignar Monto
+             </button>
+           }</td>
+    </tr>
+  }
+  </tbody>
+</table>
+<div class="modal fade" id="montoModal" tabindex="-1" aria-labelledby="montoModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="montoModalLabel">Asignar Monto</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form method="post" asp-action="AsignarMonto">
+          <input type="hidden" id="pedidoIdInput" name="pedidoId" value="" />
+          <div class="mb-3">
+            <label for="monto" class="form-label">Monto</label>
+            <input type="number" class="form-control" id="monto" name="monto" required />
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            <button type="submit" class="btn btn-primary">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Capturar el evento 'show.bs.modal' para cargar el ID del pedido en el modal
+  var montoModal = document.getElementById('montoModal');
+  montoModal.addEventListener('show.bs.modal', function (event) {
+    // Botón que disparó el modal
+    var button = event.relatedTarget;
+    // Extraer el ID del pedido del atributo 'data-pedido-id'
+    var pedidoId = button.getAttribute('data-pedido-id');
+    // Insertar el ID del pedido en el input oculto
+    var pedidoIdInput = montoModal.querySelector('#pedidoIdInput');
+    pedidoIdInput.value = pedidoId;
+  });
+</script>
+
+
+<!-- Modal Nota de Venta -->
+<div class="modal fade" id="notaVentaModal" tabindex="-1" aria-labelledby="notaVentaModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="notaVentaModalLabel">Nota de Venta Generada</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>ID Pedido:</strong> <span id="notaVentaIdPedido"></span></p>
+        <p><strong>Metodo de Pago:</strong> <span id="notaVentaMetodo"></span></p>
+        <p><strong>Monto Total:</strong> <span id="notaVentaMontoTotal"></span></p>
+        <p><strong>Monto Pagado:</strong> <span id="notaVentaMontoPagado"></span></p>
+        <p><strong>Cambio:</strong> <span id="notaVentaCambio"></span></p>
+        <p><strong>Fecha de Pago:</strong> <span id="notaVentaFechaPago"></span></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Obtener el JSON de TempData
+    var notaVentaJson = '@Html.Raw(TempData["NotaVenta"])';
+
+    // Si la Nota de Venta no está vacía
+    if (notaVentaJson && notaVentaJson.trim() !== '') {
+      try {
+        // Parseamos el JSON
+        var notaVenta = JSON.parse(notaVentaJson);
+
+        // Llenar los campos del modal con los valores de notaVenta
+        document.getElementById('notaVentaIdPedido').textContent = notaVenta.idPedido;
+        document.getElementById('notaVentaMetodo').textContent = notaVenta.metodo;
+        document.getElementById('notaVentaMontoTotal').textContent = 'Bs' + notaVenta.montoTotal.toFixed(2);
+        document.getElementById('notaVentaMontoPagado').textContent = 'Bs' + notaVenta.montoPagado.toFixed(2);
+        document.getElementById('notaVentaCambio').textContent = 'Bs' + notaVenta.cambio.toFixed(2);
+        document.getElementById('notaVentaFechaPago').textContent = new Date(parseInt(notaVenta.fechaPago)).toLocaleString();
+
+        // Mostrar el modal
+        var modal = new bootstrap.Modal(document.getElementById('notaVentaModal'));
+        modal.show();
+      } catch (e) {
+        console.error('Error al procesar el JSON de Nota de Venta:', e);
+      }
+    }
+  });
+</script>
+
+

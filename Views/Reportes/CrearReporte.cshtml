@@ -1,0 +1,21 @@
+﻿@model AspnetCoreMvcFull.Models.ViewModels.CreateReporteViewModel
+
+@{
+  ViewData["Title"] = "Crear Reporte";
+}
+
+<h1>Crear Reporte</h1>
+
+<form method="post" asp-action="CrearReporte">
+  <div class="form-group">
+    <label for="FechaInicio">Fecha de Inicio</label>
+    <input type="date" class="form-control" id="FechaInicio" name="FechaInicio" value="@Model.FechaInicio" required />
+  </div>
+
+  <div class="form-group">
+    <label for="FechaFin">Fecha de Fin</label>
+    <input type="date" class="form-control" id="FechaFin" name="FechaFin" value="@Model.FechaFin" required />
+  </div>
+
+  <button type="submit" class="btn btn-primary">Crear Reporte</button>
+</form>

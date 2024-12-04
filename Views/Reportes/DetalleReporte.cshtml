@@ -1,0 +1,56 @@
+﻿@model AspnetCoreMvcFull.Models.ViewModels.DetalleReporteViewModel
+
+@{
+  ViewData["Title"] = "Detalle del Reporte";
+}
+
+<h1>Detalle del Reporte</h1>
+
+<h2>Reporte: @Model.Reporte.Id</h2>
+<p>Fecha de Inicio: @DateTimeOffset.FromUnixTimeMilliseconds(long.Parse(Model.Reporte.FechaInicio)).DateTime.ToString("yyyy-MM-dd")</p>
+<p>Fecha de Fin: @DateTimeOffset.FromUnixTimeMilliseconds(long.Parse(Model.Reporte.FechaFin)).DateTime.ToString("yyyy-MM-dd")</p>
+<p>Ventas Totales: Bs @Model.Reporte.VentasTotales</p>
+<p>Pedidos Completados: @Model.Reporte.PedidosCompletados</p>
+
+<h3>Pedidos Vendidos</h3>
+
+<table class="table table-striped">
+  <thead>
+  <tr>
+    <th>ID Pedido</th>
+    <th>Estado</th>
+    <th>Total</th>
+    <th>Fecha de Creación</th>
+    <th>Productos</th>
+    <th>Promociones</th>
+  </tr>
+  </thead>
+  <tbody>
+  @foreach (var pedido in Model.Pedidos)
+  {
+    <tr>
+      <td>@pedido.Id</td>
+      <td>@pedido.Estado</td>
+      <td>Bs @pedido.Total</td>
+      <td>@DateTimeOffset.FromUnixTimeMilliseconds(long.Parse(pedido.FechaCreacion)).DateTime.ToString("yyyy-MM-dd")</td>
+      <td>
+      <td>
+        <ul>
+          @foreach (var producto in pedido.Productos)
+          {
+            <li>Producto: @producto.Id, Cantidad: @producto.Cantidad</li>
+          }
+        </ul>
+      </td>
+      <td>
+        <ul>
+          @foreach (var promocion in pedido.Promociones)
+          {
+            <li>Promoción: @promocion.Id, Cantidad: @promocion.Cantidad</li>
+          }
+        </ul>
+      </td>
+    </tr>
+  }
+  </tbody>
+</table>
