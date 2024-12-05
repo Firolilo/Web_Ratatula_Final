@@ -2,7 +2,7 @@ namespace AspnetCoreMvcFull.Models.ViewModels
 {
   public class ProductoViewModel
   {
-    public string Id { get; set; }
+    public string? Id { get; set; }
     public string Nombre { get; set; }
     public string Descripcion { get; set; }
     public decimal Precio { get; set; }
@@ -11,6 +11,6 @@ namespace AspnetCoreMvcFull.Models.ViewModels
   }
   public class ObtenerProductosResponse
   {
-    public List<ProductoViewModel> ObtenerProductos { get; set; }
+    public List<ProductoViewModel> ObtenerProductosLocal { get; set; }
   }
 }

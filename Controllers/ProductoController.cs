@@ -23,8 +23,8 @@ namespace AspnetCoreMvcFull.Controllers
         {
             // Definimos la consulta GraphQL para obtener productos
             const string query = @"
-                query ObtenerProductos {
-                    obtenerProductos {
+                query ObtenerProductosLocal($idLocal: ID!) {
+                    obtenerProductosLocal(idLocal: $idLocal) {
                         id
                         nombre
                         descripcion
@@ -34,15 +34,20 @@ namespace AspnetCoreMvcFull.Controllers
                     }
                 }";
 
+            var variables = new
+            {
+              idLocal = UserSingleton.Instance.Id
+            };
+
             // Llamamos al servicio GraphQL para obtener los productos
-            var response = await _graphQLService.ExecuteQueryAsync<ObtenerProductosResponse>(query);
+            var response = await _graphQLService.ExecuteQueryAsync<ObtenerProductosResponse>(query, variables, HttpContext.Session.GetString("AuthToken"));
 
             // Imprimir la respuesta de GraphQL en la consola
             Console.WriteLine("Respuesta completa de la consulta GraphQL:");
             var jsonResponse = JsonConvert.SerializeObject(response, Formatting.Indented);
             Console.WriteLine(jsonResponse);
 
-            return View(response.ObtenerProductos);
+            return View(response.ObtenerProductosLocal);
             // Pasamos los productos a la vista
         }
 
